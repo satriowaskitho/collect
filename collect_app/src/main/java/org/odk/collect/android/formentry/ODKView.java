@@ -22,7 +22,6 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Rect;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
@@ -57,14 +56,15 @@ import org.odk.collect.android.audio.PlaybackFailedException;
 import org.odk.collect.android.exception.ExternalParamsException;
 import org.odk.collect.android.exception.JavaRosaException;
 import org.odk.collect.android.external.ExternalAppsUtils;
+import org.odk.collect.android.javarosawrapper.FormController;
 import org.odk.collect.android.formentry.media.AudioHelperFactory;
 import org.odk.collect.android.formentry.media.PromptAutoplayer;
+import org.odk.collect.android.formentry.questions.QuestionTextSizeHelper;
 import org.odk.collect.android.listeners.WidgetValueChangedListener;
-import org.odk.collect.android.logic.FormController;
+import org.odk.collect.android.utilities.QuestionFontSizeUtils;
 import org.odk.collect.android.utilities.ScreenContext;
 import org.odk.collect.android.utilities.ThemeUtils;
 import org.odk.collect.android.utilities.ToastUtils;
-import org.odk.collect.android.utilities.ViewIds;
 import org.odk.collect.android.widgets.QuestionWidget;
 import org.odk.collect.android.widgets.StringWidget;
 import org.odk.collect.android.widgets.WidgetFactory;
@@ -168,7 +168,7 @@ public class ODKView extends FrameLayout implements OnLongClickListener, WidgetV
                         Toast.LENGTH_SHORT
                 ).show();
 
-                audioHelper.dismissError();
+                audioHelper.errorDisplayed();
             }
         });
     }
@@ -264,7 +264,6 @@ public class ODKView extends FrameLayout implements OnLongClickListener, WidgetV
         QuestionWidget qw = WidgetFactory.createWidgetFromPrompt(question, getContext(), readOnlyOverride);
         qw.setOnLongClickListener(this);
         qw.setValueChangedListener(this);
-        qw.setId(ViewIds.generateViewId());
 
         return qw;
     }
@@ -391,10 +390,10 @@ public class ODKView extends FrameLayout implements OnLongClickListener, WidgetV
 
         // set button formatting
         Button launchIntentButton = new Button(getContext());
-        launchIntentButton.setId(ViewIds.generateViewId());
+        launchIntentButton.setId(View.generateViewId());
         launchIntentButton.setText(buttonText);
         launchIntentButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP,
-                Collect.getQuestionFontsize() + 2);
+                QuestionFontSizeUtils.getQuestionFontSize() + 2);
         launchIntentButton.setPadding(20, 20, 20, 20);
         launchIntentButton.setLayoutParams(params);
 
@@ -618,19 +617,7 @@ public class ODKView extends FrameLayout implements OnLongClickListener, WidgetV
                 scrollTo(qw);
 
                 ValueAnimator va = new ValueAnimator();
-                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
-                    va.setIntValues(getResources().getColor(R.color.red_500), getDrawingCacheBackgroundColor());
-                } else {
-                    // Avoid fading to black on certain devices and Android versions that may not support transparency
-                    TypedValue typedValue = new TypedValue();
-                    getContext().getTheme().resolveAttribute(android.R.attr.windowBackground, typedValue, true);
-                    if (typedValue.type >= TypedValue.TYPE_FIRST_COLOR_INT && typedValue.type <= TypedValue.TYPE_LAST_COLOR_INT) {
-                        va.setIntValues(getResources().getColor(R.color.red_500), typedValue.data);
-                    } else {
-                        va.setIntValues(getResources().getColor(R.color.red_500), getDrawingCacheBackgroundColor());
-                    }
-                }
-
+                va.setIntValues(getResources().getColor(R.color.red_500), getDrawingCacheBackgroundColor());
                 va.setEvaluator(new ArgbEvaluator());
                 va.addUpdateListener(valueAnimator -> qw.setBackgroundColor((int) valueAnimator.getAnimatedValue()));
                 va.setDuration(2500);

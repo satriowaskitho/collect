@@ -12,6 +12,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.odk.collect.android.preferences.AdminSharedPreferences;
 import org.odk.collect.android.preferences.GeneralSharedPreferences;
+import org.odk.collect.android.preferences.qr.ObservableQRCodeGenerator;
+import org.odk.collect.android.preferences.qr.QRCodeGenerator;
 import org.odk.collect.android.storage.StoragePathProvider;
 import org.odk.collect.android.storage.StorageSubdirectory;
 import org.robolectric.RobolectricTestRunner;
@@ -31,14 +33,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.odk.collect.android.utilities.QRCodeUtils.MD5_CACHE_PATH;
-import static org.odk.collect.android.utilities.QRCodeUtils.QR_CODE_FILEPATH;
 
 @RunWith(RobolectricTestRunner.class)
 public class QRCodeUtilsTest {
 
-    private final File savedQrCodeImage = new File(QR_CODE_FILEPATH);
-    private final File md5File = new File(MD5_CACHE_PATH);
+    private final QRCodeGenerator qrCodeGenerator = new ObservableQRCodeGenerator();
+    private final File savedQrCodeImage = new File(qrCodeGenerator.getQrCodeFilepath());
+    private final File md5File = new File(qrCodeGenerator.getMd5CachePath());
 
     @Before
     public void setup() {
@@ -51,7 +52,7 @@ public class QRCodeUtilsTest {
     @Test
     public void generateAndDecodeQRCode() throws IOException, WriterException, DataFormatException, ChecksumException, NotFoundException, FormatException {
         String data = "Some random text";
-        Bitmap generatedQRBitMap = QRCodeUtils.generateQRBitMap(data, 100);
+        Bitmap generatedQRBitMap = qrCodeGenerator.generateQRBitMap(data, 100);
         assertQRContains(generatedQRBitMap, data);
     }
 
@@ -80,7 +81,7 @@ public class QRCodeUtilsTest {
 
         // stubbing cache and bitmap files
         new File(new StoragePathProvider().getDirPath(StorageSubdirectory.SETTINGS)).mkdirs();
-        FileUtils.saveBitmapToFile(QRCodeUtils.generateQRBitMap(expectedData, 100), QR_CODE_FILEPATH);
+        FileUtils.saveBitmapToFile(qrCodeGenerator.generateQRBitMap(expectedData, 100), qrCodeGenerator.getQrCodeFilepath());
         FileUtils.write(md5File, getDigest(expectedData.getBytes()));
 
         // verify that QRCode and md5 cache files exist
@@ -102,7 +103,7 @@ public class QRCodeUtilsTest {
 
     public void generateQrCode(GenerationResults generationResults) {
         // subscribe to the QRCode generator in the same thread
-        QRCodeUtils.getQRCodeGeneratorObservable(new ArrayList<>())
+        qrCodeGenerator.generateQRCode(new ArrayList<>())
                 .subscribe(generationResults.generatedBitmap::set, generationResults.errorThrown::set, () -> generationResults.isFinished.set(true));
 
         generationResults.assertGeneratedOk();

@@ -17,7 +17,6 @@
 package org.odk.collect.android.widgets;
 
 import android.content.Context;
-import android.os.Build;
 import androidx.annotation.IdRes;
 import androidx.annotation.LayoutRes;
 import androidx.annotation.Nullable;
@@ -33,6 +32,7 @@ import org.javarosa.core.model.RangeQuestion;
 import org.odk.collect.android.R;
 import org.odk.collect.android.activities.FormEntryActivity;
 import org.odk.collect.android.formentry.questions.QuestionDetails;
+import org.odk.collect.android.formentry.questions.WidgetViewUtils;
 import org.odk.collect.android.fragments.dialogs.NumberPickerDialog;
 import org.odk.collect.android.utilities.ToastUtils;
 import org.odk.collect.android.widgets.interfaces.ButtonWidget;
@@ -83,7 +83,7 @@ public abstract class RangeWidget extends QuestionWidget implements ButtonWidget
             seekBar.setEnabled(false);
         }
 
-        addAnswerView(view);
+        addAnswerView(view, WidgetViewUtils.getStandardMargin(context));
     }
 
     @Override
@@ -150,9 +150,7 @@ public abstract class RangeWidget extends QuestionWidget implements ButtonWidget
         } else {
             seekBar.setProgress(progress);
             actualValue = null;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                seekBar.setSplitTrack(false);
-            }
+            seekBar.setSplitTrack(false);
             seekBar.getThumb().mutate().setAlpha(0);
             setUpActualValueLabel();
         }
@@ -172,15 +170,7 @@ public abstract class RangeWidget extends QuestionWidget implements ButtonWidget
         seekBar.setOnSeekBarChangeListener(this);
         if (isRTL()) {
             float rotate = seekBar.getRotation();
-            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT ||
-                    Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                seekBar.setRotation(180 - rotate);
-            } else if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT ||
-                    Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                seekBar.setRotation(360 - rotate);
-            } else {
-                seekBar.setRotation(rotate);
-            }
+            seekBar.setRotation(360 - rotate);
         }
 
         seekBar.setOnTouchListener(new SeekBar.OnTouchListener() {

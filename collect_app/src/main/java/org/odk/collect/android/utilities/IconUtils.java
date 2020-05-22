@@ -21,10 +21,10 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import androidx.core.content.ContextCompat;
 
 import org.odk.collect.android.R;
+import org.odk.collect.android.provider.InstanceProviderAPI;
 
 public class IconUtils {
 
@@ -32,8 +32,7 @@ public class IconUtils {
     }
 
     public static int getNotificationAppIcon() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ?
-                R.drawable.ic_notes_white : R.drawable.ic_notes_white_png;
+        return R.drawable.ic_notes_white;
     }
 
     /** Renders a Drawable (such as a vector drawable) into a Bitmap. */
@@ -55,5 +54,19 @@ public class IconUtils {
         drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
         drawable.draw(canvas);
         return bitmap;
+    }
+
+    public static Drawable getSubmissionSummaryStatusIcon(Context context, String instanceStatus) {
+        switch (instanceStatus) {
+            case InstanceProviderAPI.STATUS_INCOMPLETE:
+                return ContextCompat.getDrawable(context, R.drawable.form_state_saved);
+            case InstanceProviderAPI.STATUS_COMPLETE:
+                return ContextCompat.getDrawable(context, R.drawable.form_state_finalized);
+            case InstanceProviderAPI.STATUS_SUBMITTED:
+                return ContextCompat.getDrawable(context, R.drawable.form_state_submited);
+            case InstanceProviderAPI.STATUS_SUBMISSION_FAILED:
+                return ContextCompat.getDrawable(context, R.drawable.form_state_submission_failed);
+        }
+        return null;
     }
 }

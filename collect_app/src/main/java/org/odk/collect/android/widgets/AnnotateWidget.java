@@ -29,6 +29,7 @@ import org.odk.collect.android.BuildConfig;
 import org.odk.collect.android.R;
 import org.odk.collect.android.activities.DrawActivity;
 import org.odk.collect.android.formentry.questions.QuestionDetails;
+import org.odk.collect.android.formentry.questions.WidgetViewUtils;
 import org.odk.collect.android.listeners.PermissionListener;
 import org.odk.collect.android.storage.StoragePathProvider;
 import org.odk.collect.android.utilities.FileUtils;
@@ -64,7 +65,8 @@ public class AnnotateWidget extends BaseImageWidget {
         imageCaptureHandler = new ImageCaptureHandler();
         setUpLayout();
         addCurrentImageToLayout();
-        addAnswerView(answerLayout);
+        adjustAnnotateButtonAvailability();
+        addAnswerView(answerLayout, WidgetViewUtils.getStandardMargin(context));
     }
 
     @Override
@@ -75,9 +77,7 @@ public class AnnotateWidget extends BaseImageWidget {
         chooseButton = createSimpleButton(getContext(), R.id.choose_image, getFormEntryPrompt().isReadOnly(), getContext().getString(R.string.choose_image), getAnswerFontSize(), this);
 
         annotateButton = createSimpleButton(getContext(), R.id.markup_image, getFormEntryPrompt().isReadOnly(), getContext().getString(R.string.markup_image), getAnswerFontSize(), this);
-        if (binaryName == null) {
-            annotateButton.setEnabled(false);
-        }
+
         annotateButton.setOnClickListener(v -> imageClickHandler.clickImage("annotateButton"));
 
         answerLayout.addView(captureButton);
@@ -93,6 +93,11 @@ public class AnnotateWidget extends BaseImageWidget {
     public Intent addExtrasToIntent(Intent intent) {
         intent.putExtra(DrawActivity.SCREEN_ORIENTATION, calculateScreenOrientation());
         return intent;
+    }
+
+    @Override
+    protected boolean doesSupportDefaultValues() {
+        return true;
     }
 
     @Override
@@ -140,6 +145,12 @@ public class AnnotateWidget extends BaseImageWidget {
             case R.id.choose_image:
                 imageCaptureHandler.chooseImage(R.string.annotate_image);
                 break;
+        }
+    }
+
+    private void adjustAnnotateButtonAvailability() {
+        if (binaryName == null || imageView == null || imageView.getVisibility() == GONE) {
+            annotateButton.setEnabled(false);
         }
     }
 

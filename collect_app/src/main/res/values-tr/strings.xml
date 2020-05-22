@@ -48,8 +48,6 @@
   <string name="get_location">Yeri kaydet</string>
   <string name="jump_to_beginning">Başlangıca Git</string>
   <string name="loading_form">Form Yükleniyor</string>
-  <string name="main_menu">Ana Menu</string>
-  <string name="main_menu_details">Daha Kolay veri toplama…</string>
   <string name="manage_files">Kayitli Formu Sil</string>
   <string name="mark_finished">Bitirilen Formu işaretle</string>
   <string name="noselect_error">Herhangi bir form seçilmedi !</string>
@@ -135,7 +133,6 @@
   <string name="admin_password_disabled">Yönetici Şifresi Kapatılmış</string>
   <string name="admin_password_incorrect">Yanliş Şifre</string>
   <string name="enter_admin_password">Yönetici Şifresi Giriniz</string>
-  <string name="save_preferences">Değişiklikleri Diske Kaydet</string>
   <string name="form_forward">İleri</string>
   <string name="navigation">navigasyon</string>
   <string name="buttons_navigation">ileri/geri butonlarini kullan </string>

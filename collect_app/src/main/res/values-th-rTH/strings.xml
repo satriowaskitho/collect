@@ -63,8 +63,6 @@
   <string name="load_remote_form_error">มีข้อผิดพลาด ไม่สามารถแสดงรายการแบบสำรวจได้</string>
   <string name="location_provider_accuracy">รับพิกัดผ่าน %1$s ค่าความแม่นยำที่ %2$s เมตร</string>
   <string name="location_accuracy">ความแม่นยำ %1$s เมตร</string>
-  <string name="main_menu">เมนูหลัก</string>
-  <string name="main_menu_details">Data collection made easier…</string>
   <string name="manage_files">ลบแบบสำรวจที่บันทึกไว้</string>
   <string name="mark_finished">ทำเครื่องหมายแบบสำรวจว่าเสร็จเรียบร้อยแล้ว</string>
   <string name="noselect_error">ขออภัย ท่านยังไม่ได้เลือกแบบสำรวจ</string>
@@ -184,7 +182,6 @@
   <string name="change_admin_password">เปลี่ยนรหัสผ่านของผู้ดูแลระบบ</string>
   <string name="found_in_main">ปล่อยว่างเพื่อซ่อนจากเมนูหลัก</string>
   <string name="found_in_settings">ปล่อยว่างเพื่อซ่อนจากเมนูตั้งค่าทั่วไป</string>
-  <string name="save_preferences">บันทึกการตั้งค่า</string>
   <string name="form_forward">ต่อไป</string>
   <string name="navigation">ค้นหา</string>
   <string name="swipe_navigation">ใช้การเลื่อนหน้าจอไปด้านข้าง</string>

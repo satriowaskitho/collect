@@ -29,6 +29,7 @@ import org.odk.collect.android.R;
 import org.odk.collect.android.activities.FormEntryActivity;
 import org.odk.collect.android.activities.ScannerWithFlashlightActivity;
 import org.odk.collect.android.formentry.questions.QuestionDetails;
+import org.odk.collect.android.formentry.questions.WidgetViewUtils;
 import org.odk.collect.android.listeners.PermissionListener;
 import org.odk.collect.android.utilities.CameraUtils;
 import org.odk.collect.android.utilities.ToastUtils;
@@ -65,7 +66,7 @@ public class BarcodeWidget extends QuestionWidget implements BinaryWidget {
         answerLayout.setOrientation(LinearLayout.VERTICAL);
         answerLayout.addView(getBarcodeButton);
         answerLayout.addView(stringAnswer);
-        addAnswerView(answerLayout);
+        addAnswerView(answerLayout, WidgetViewUtils.getStandardMargin(context));
     }
 
     @Override
@@ -127,10 +128,7 @@ public class BarcodeWidget extends QuestionWidget implements BinaryWidget {
                 waitForData();
 
                 IntentIntegrator intent = new IntentIntegrator((Activity) getContext())
-                        .setCaptureActivity(ScannerWithFlashlightActivity.class)
-                        .setDesiredBarcodeFormats(IntentIntegrator.ALL_CODE_TYPES)
-                        .setOrientationLocked(false)
-                        .setPrompt(getContext().getString(R.string.barcode_scanner_prompt));
+                        .setCaptureActivity(ScannerWithFlashlightActivity.class);
 
                 setCameraIdIfNeeded(intent);
                 intent.initiateScan();
@@ -146,7 +144,6 @@ public class BarcodeWidget extends QuestionWidget implements BinaryWidget {
         String appearance = getFormEntryPrompt().getAppearanceHint();
         if (appearance != null && appearance.equalsIgnoreCase(WidgetAppearanceUtils.FRONT)) {
             if (CameraUtils.isFrontCameraAvailable()) {
-                intent.setCameraId(CameraUtils.getFrontCameraId());
                 intent.addExtra(WidgetAppearanceUtils.FRONT, true);
             } else {
                 ToastUtils.showLongToast(R.string.error_front_camera_unavailable);

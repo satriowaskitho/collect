@@ -15,7 +15,7 @@
 package org.odk.collect.android.widgets;
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
 import android.content.Context;
 import android.text.TextUtils;
 import android.view.View;
@@ -28,6 +28,7 @@ import org.javarosa.core.model.data.SelectMultiData;
 import org.javarosa.core.model.data.helper.Selection;
 import org.odk.collect.android.R;
 import org.odk.collect.android.formentry.questions.QuestionDetails;
+import org.odk.collect.android.formentry.questions.WidgetViewUtils;
 import org.odk.collect.android.utilities.StringUtils;
 import org.odk.collect.android.widgets.interfaces.ButtonWidget;
 import org.odk.collect.android.widgets.interfaces.MultiChoiceWidget;
@@ -42,11 +43,7 @@ import static org.odk.collect.android.formentry.questions.WidgetViewUtils.create
 /**
  * SpinnerMultiWidget, like SelectMultiWidget handles multiple selection fields using checkboxes,
  * but the user clicks a button to see the checkboxes. The goal is to be more compact. If images,
- * audio, or video are specified in the select answers they are ignored. WARNING: There is a bug in
- * android versions previous to 2.0 that affects this widget. You can find the report here:
- * http://code.google.com/p/android/issues/detail?id=922 This bug causes text to be white in alert
- * boxes, which makes the select options invisible in this widget. For this reason, this widget
- * should not be used on phones with android versions lower than 2.0.
+ * audio, or video are specified in the select answers they are ignored.
  *
  * @author Jeff Beorse (jeff@beorse.net)
  */
@@ -113,7 +110,7 @@ public class SpinnerMultiWidget extends ItemsWidget implements ButtonWidget, Mul
         answerLayout.setOrientation(LinearLayout.VERTICAL);
         answerLayout.addView(button);
         answerLayout.addView(selectionText);
-        addAnswerView(answerLayout);
+        addAnswerView(answerLayout, WidgetViewUtils.getStandardMargin(context));
 
         SpacesInUnderlyingValuesWarning.forQuestionWidget(this).renderWarningIfNecessary(items);
     }

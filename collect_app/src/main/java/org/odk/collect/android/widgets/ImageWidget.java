@@ -18,7 +18,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import androidx.core.content.FileProvider;
 import android.view.View;
 import android.widget.Button;
@@ -26,8 +25,8 @@ import android.widget.Button;
 import org.odk.collect.android.BuildConfig;
 import org.odk.collect.android.R;
 import org.odk.collect.android.activities.CaptureSelfieActivity;
-import org.odk.collect.android.activities.CaptureSelfieActivityNewApi;
 import org.odk.collect.android.formentry.questions.QuestionDetails;
+import org.odk.collect.android.formentry.questions.WidgetViewUtils;
 import org.odk.collect.android.listeners.PermissionListener;
 import org.odk.collect.android.storage.StoragePathProvider;
 import org.odk.collect.android.utilities.CameraUtils;
@@ -61,7 +60,7 @@ public class ImageWidget extends BaseImageWidget {
         imageCaptureHandler = new ImageCaptureHandler();
         setUpLayout();
         addCurrentImageToLayout();
-        addAnswerView(answerLayout);
+        addAnswerView(answerLayout, WidgetViewUtils.getStandardMargin(context));
     }
 
     @Override
@@ -95,6 +94,11 @@ public class ImageWidget extends BaseImageWidget {
     @Override
     public Intent addExtrasToIntent(Intent intent) {
         return intent;
+    }
+
+    @Override
+    protected boolean doesSupportDefaultValues() {
+        return false;
     }
 
     @Override
@@ -150,11 +154,7 @@ public class ImageWidget extends BaseImageWidget {
         errorTextView.setVisibility(View.GONE);
         Intent intent;
         if (selfie) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                intent = new Intent(getContext(), CaptureSelfieActivityNewApi.class);
-            } else {
-                intent = new Intent(getContext(), CaptureSelfieActivity.class);
-            }
+            intent = new Intent(getContext(), CaptureSelfieActivity.class);
         } else {
             intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
             // We give the camera an absolute filename/path where to put the

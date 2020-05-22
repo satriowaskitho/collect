@@ -37,15 +37,16 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.odk.collect.android.R;
+import org.odk.collect.android.analytics.Analytics;
 import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.dao.FormsDao;
 import org.odk.collect.android.dao.InstancesDao;
 import org.odk.collect.android.exception.EncryptionException;
-import org.odk.collect.android.formentry.FormSaver;
+import org.odk.collect.android.formentry.saving.FormSaver;
 import org.odk.collect.android.instances.DatabaseInstancesRepository;
 import org.odk.collect.android.instances.Instance;
 import org.odk.collect.android.instances.InstancesRepository;
-import org.odk.collect.android.logic.FormController;
+import org.odk.collect.android.javarosawrapper.FormController;
 import org.odk.collect.android.provider.FormsProviderAPI.FormsColumns;
 import org.odk.collect.android.provider.InstanceProviderAPI;
 import org.odk.collect.android.provider.InstanceProviderAPI.InstanceColumns;
@@ -63,6 +64,7 @@ import java.io.RandomAccessFile;
 
 import timber.log.Timber;
 
+import static org.odk.collect.android.analytics.AnalyticsEvents.ENCRYPT_SUBMISSION;
 import static org.odk.collect.android.utilities.FileUtil.getSmsInstancePath;
 
 /**
@@ -75,26 +77,29 @@ public class SaveFormToDisk {
 
     private final boolean saveAndExit;
     private final boolean shouldFinalize;
+    private final FormController formController;
     private Uri uri;
     private String instanceName;
+    private final Analytics analytics;
 
     public static final int SAVED = 500;
     public static final int SAVE_ERROR = 501;
     public static final int SAVED_AND_EXIT = 504;
     public static final int ENCRYPTION_ERROR = 505;
 
-    public SaveFormToDisk(Uri uri, boolean saveAndExit, boolean shouldFinalize, String updatedName) {
+    public SaveFormToDisk(FormController formController, boolean saveAndExit, boolean shouldFinalize, String updatedName, Uri uri, Analytics analytics) {
+        this.formController = formController;
         this.uri = uri;
         this.saveAndExit = saveAndExit;
         this.shouldFinalize = shouldFinalize;
-        instanceName = updatedName;
+        this.instanceName = updatedName;
+        this.analytics = analytics;
     }
 
     @Nullable
     public SaveToDiskResult saveForm(FormSaver.ProgressListener progressListener) {
         SaveToDiskResult saveToDiskResult = new SaveToDiskResult();
 
-        FormController formController = Collect.getInstance().getFormController();
         progressListener.onProgressUpdate(Collect.getInstance().getString(R.string.survey_saving_validating_message));
 
         try {
@@ -418,6 +423,8 @@ public class SaveFormToDisk {
 
                 EncryptionUtils.generateEncryptedSubmission(instanceXml, submissionXml, formInfo);
                 isEncrypted = true;
+
+                analytics.logEvent(ENCRYPT_SUBMISSION, Collect.getCurrentFormIdentifierHash(), "");
             }
 
             // At this point, we have:

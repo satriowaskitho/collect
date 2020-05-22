@@ -36,11 +36,11 @@ public class SpinnerWidgetTest extends BaseRegressionTest {
                 .clickOnString(R.string.select_one)
                 .clickOnAreaWithIndex("TextView", 2)
                 .clickOnText("c")
-                .checkIsTextDisplayed("c")
+                .assertText("c")
                 .checkIfTextDoesNotExist("a")
                 .checkIfTextDoesNotExist("b")
                 .pressBack(new FormEntryPage("selectOneMinimal", rule))
-                .swipeToNextQuestion()
+                .swipeToEndScreen()
                 .clickSaveAndExit();
     }
 }

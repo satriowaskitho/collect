@@ -33,7 +33,7 @@ import timber.log.Timber;
 
 import static org.odk.collect.android.preferences.AdminKeys.ALL_KEYS;
 import static org.odk.collect.android.preferences.AdminKeys.KEY_ADMIN_PW;
-import static org.odk.collect.android.preferences.GeneralKeys.GENERAL_KEYS;
+import static org.odk.collect.android.preferences.GeneralKeys.DEFAULTS;
 import static org.odk.collect.android.preferences.GeneralKeys.KEY_PASSWORD;
 
 public final class SharedPreferencesUtils {
@@ -42,9 +42,9 @@ public final class SharedPreferencesUtils {
 
     }
 
-    static String getJSONFromPreferences(Collection<String> passwordKeys) throws JSONException {
+    public static String getJSONFromPreferences(Collection<String> passwordKeys) throws JSONException {
         Collection<String> keys = new ArrayList<>(passwordKeys);
-        keys.addAll(GENERAL_KEYS.keySet());
+        keys.addAll(DEFAULTS.keySet());
         JSONObject sharedPrefJson = getModifiedPrefs(keys);
         Timber.i(sharedPrefJson.toString());
         return sharedPrefJson.toString();
@@ -55,7 +55,7 @@ public final class SharedPreferencesUtils {
         JSONObject adminPrefs = new JSONObject();
         JSONObject generalPrefs = new JSONObject();
 
-        //checking for admin password
+        // checking for admin password
         if (keys.contains(KEY_ADMIN_PW)) {
             String password = (String) AdminSharedPreferences.getInstance().get(KEY_ADMIN_PW);
             if (!password.equals("")) {
@@ -64,8 +64,17 @@ public final class SharedPreferencesUtils {
             keys.remove(KEY_ADMIN_PW);
         }
 
+        // checking for server password
+        if (keys.contains(KEY_PASSWORD)) {
+            String password = (String) GeneralSharedPreferences.getInstance().get(KEY_PASSWORD);
+            if (!password.equals("")) {
+                adminPrefs.put(KEY_PASSWORD, password);
+            }
+            keys.remove(KEY_PASSWORD);
+        }
+
         for (String key : keys) {
-            Object defaultValue = GENERAL_KEYS.get(key);
+            Object defaultValue = DEFAULTS.get(key);
             Object value = GeneralSharedPreferences.getInstance().get(key);
 
             if (value == null) {
@@ -127,7 +136,7 @@ public final class SharedPreferencesUtils {
     }
 
     public static Collection<String> getAllGeneralKeys() {
-        Collection<String> keys = new HashSet<>(GENERAL_KEYS.keySet());
+        Collection<String> keys = new HashSet<>(DEFAULTS.keySet());
         keys.add(KEY_PASSWORD);
         return keys;
     }

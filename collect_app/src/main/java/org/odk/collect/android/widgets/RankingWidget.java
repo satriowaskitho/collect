@@ -29,8 +29,9 @@ import org.odk.collect.android.R;
 import org.odk.collect.android.activities.FormEntryActivity;
 import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.formentry.questions.QuestionDetails;
+import org.odk.collect.android.formentry.questions.WidgetViewUtils;
 import org.odk.collect.android.fragments.dialogs.RankingWidgetDialog;
-import org.odk.collect.android.logic.FormController;
+import org.odk.collect.android.javarosawrapper.FormController;
 import org.odk.collect.android.widgets.interfaces.BinaryWidget;
 import org.odk.collect.android.widgets.warnings.SpacesInUnderlyingValuesWarning;
 
@@ -43,8 +44,8 @@ import static org.odk.collect.android.formentry.questions.WidgetViewUtils.create
 public class RankingWidget extends ItemsWidget implements BinaryWidget {
 
     private List<SelectChoice> savedItems;
-    private LinearLayout widgetLayout;
     Button showRankingDialogButton;
+    private TextView answerTextView;
 
     public RankingWidget(Context context, QuestionDetails prompt) {
         super(context, prompt);
@@ -67,7 +68,7 @@ public class RankingWidget extends ItemsWidget implements BinaryWidget {
     @Override
     public void clearAnswer() {
         savedItems = null;
-        setUpLayout(items);
+        answerTextView.setText(getAnswerText());
     }
 
     @Override
@@ -88,7 +89,7 @@ public class RankingWidget extends ItemsWidget implements BinaryWidget {
     @Override
     public void setBinaryData(Object values) {
         savedItems = (List<SelectChoice>) values;
-        setUpLayout(savedItems);
+        answerTextView.setText(getAnswerText());
     }
 
     @Override
@@ -131,21 +132,21 @@ public class RankingWidget extends ItemsWidget implements BinaryWidget {
     }
 
     private void setUpLayout(List<SelectChoice> items) {
-        removeView(widgetLayout);
-
-        widgetLayout = new LinearLayout(getContext());
-        widgetLayout.setOrientation(LinearLayout.VERTICAL);
         showRankingDialogButton = createSimpleButton(getContext(), getFormEntryPrompt().isReadOnly(), getContext().getString(R.string.rank_items), getAnswerFontSize(), this);
-        widgetLayout.addView(showRankingDialogButton);
-        widgetLayout.addView(setUpAnswerTextView());
+        answerTextView = createAnswerTextView(getContext(), getAnswerText(), getAnswerFontSize());
 
-        addAnswerView(widgetLayout);
+        LinearLayout widgetLayout = new LinearLayout(getContext());
+        widgetLayout.setOrientation(LinearLayout.VERTICAL);
+        widgetLayout.addView(showRankingDialogButton);
+        widgetLayout.addView(answerTextView);
+
+        addAnswerView(widgetLayout, WidgetViewUtils.getStandardMargin(getContext()));
         SpacesInUnderlyingValuesWarning
                 .forQuestionWidget(this)
                 .renderWarningIfNecessary(items);
     }
 
-    private TextView setUpAnswerTextView() {
+    private String getAnswerText() {
         StringBuilder answerText = new StringBuilder();
         if (savedItems != null) {
             for (SelectChoice item : savedItems) {
@@ -158,6 +159,6 @@ public class RankingWidget extends ItemsWidget implements BinaryWidget {
                 }
             }
         }
-        return createAnswerTextView(getContext(), answerText.toString(), getAnswerFontSize());
+        return answerText.toString();
     }
 }

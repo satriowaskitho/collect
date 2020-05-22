@@ -1,9 +1,12 @@
 package org.odk.collect.android.formentry.questions;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TableLayout;
@@ -11,19 +14,30 @@ import android.widget.TextView;
 
 import androidx.annotation.IdRes;
 
+import com.google.android.material.button.MaterialButton;
+
 import org.odk.collect.android.R;
-import org.odk.collect.android.application.Collect;
+import org.odk.collect.android.utilities.MultiClickGuard;
 import org.odk.collect.android.utilities.ThemeUtils;
-import org.odk.collect.android.utilities.ViewIds;
 import org.odk.collect.android.widgets.QuestionWidget;
 import org.odk.collect.android.widgets.interfaces.ButtonWidget;
 
 import static android.view.View.GONE;
+import static org.odk.collect.android.utilities.ViewUtils.dpFromPx;
 
 public class WidgetViewUtils {
 
+    private static final int WIDGET_ANSWER_STANDARD_MARGIN_MODIFIER = 4;
+
     private WidgetViewUtils() {
 
+    }
+
+    public static int getStandardMargin(Context context) {
+        Resources resources = context.getResources();
+        int marginStandard = dpFromPx(context, resources.getDimensionPixelSize(R.dimen.margin_standard));
+
+        return marginStandard - WIDGET_ANSWER_STANDARD_MARGIN_MODIFIER;
     }
 
     public static TextView getCenteredAnswerTextView(Context context, int answerFontSize) {
@@ -51,7 +65,8 @@ public class WidgetViewUtils {
 
     public static ImageView createAnswerImageView(Context context, Bitmap bitmap) {
         final ImageView imageView = new ImageView(context);
-        imageView.setId(ViewIds.generateViewId());
+        imageView.setId(View.generateViewId());
+        imageView.setTag("ImageView");
         imageView.setPadding(10, 10, 10, 10);
         imageView.setAdjustViewBounds(true);
         imageView.setImageBitmap(bitmap);
@@ -59,7 +74,9 @@ public class WidgetViewUtils {
     }
 
     public static Button createSimpleButton(Context context, @IdRes final int withId, boolean readOnly, String text, int answerFontSize, QuestionWidget listener) {
-        final Button button = new Button(context);
+        final MaterialButton button = (MaterialButton) LayoutInflater
+                .from(context)
+                .inflate(R.layout.widget_answer_button, null, false);
 
         if (readOnly) {
             button.setVisibility(GONE);
@@ -67,7 +84,6 @@ public class WidgetViewUtils {
             button.setId(withId);
             button.setText(text);
             button.setTextSize(TypedValue.COMPLEX_UNIT_DIP, answerFontSize);
-            button.setPadding(20, 20, 20, 20);
 
             TableLayout.LayoutParams params = new TableLayout.LayoutParams();
             params.setMargins(7, 5, 7, 5);
@@ -75,7 +91,7 @@ public class WidgetViewUtils {
             button.setLayoutParams(params);
 
             button.setOnClickListener(v -> {
-                if (Collect.allowClick(QuestionWidget.class.getName())) {
+                if (MultiClickGuard.allowClick(QuestionWidget.class.getName())) {
                     ((ButtonWidget) listener).onButtonClick(withId);
                 }
             });

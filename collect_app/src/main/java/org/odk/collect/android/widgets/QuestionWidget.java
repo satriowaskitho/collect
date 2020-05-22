@@ -39,12 +39,12 @@ import org.odk.collect.android.activities.FormEntryActivity;
 import org.odk.collect.android.analytics.Analytics;
 import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.audio.AudioHelper;
-import org.odk.collect.android.formentry.QuestionTextSizeHelper;
+import org.odk.collect.android.formentry.questions.QuestionTextSizeHelper;
 import org.odk.collect.android.formentry.media.AudioHelperFactory;
 import org.odk.collect.android.formentry.questions.AudioVideoImageTextLabel;
 import org.odk.collect.android.formentry.questions.QuestionDetails;
 import org.odk.collect.android.listeners.WidgetValueChangedListener;
-import org.odk.collect.android.logic.FormController;
+import org.odk.collect.android.javarosawrapper.FormController;
 import org.odk.collect.android.preferences.GeneralKeys;
 import org.odk.collect.android.preferences.GeneralSharedPreferences;
 import org.odk.collect.android.preferences.GuidanceHint;
@@ -67,6 +67,7 @@ import javax.inject.Inject;
 
 import timber.log.Timber;
 
+import static org.odk.collect.android.analytics.AnalyticsEvents.AUDIO_QUESTION;
 import static org.odk.collect.android.formentry.media.FormMediaUtils.getClipID;
 import static org.odk.collect.android.formentry.media.FormMediaUtils.getPlayColor;
 import static org.odk.collect.android.formentry.media.FormMediaUtils.getPlayableAudioURI;
@@ -76,7 +77,6 @@ public abstract class QuestionWidget
         extends FrameLayout
         implements Widget {
 
-    private final int questionFontSize;
     private final FormEntryPrompt formEntryPrompt;
     private final AudioVideoImageTextLabel audioVideoImageTextLabel;
     private final QuestionDetails questionDetails;
@@ -106,8 +106,13 @@ public abstract class QuestionWidget
     public Analytics analytics;
 
     public QuestionWidget(Context context, QuestionDetails questionDetails) {
+        this(context, questionDetails, true);
+    }
+
+    public QuestionWidget(Context context, QuestionDetails questionDetails, boolean registerForContextMenu) {
         super(context);
         getComponent(context).inject(this);
+        setId(View.generateViewId());
         this.audioHelper = audioHelperFactory.create(context);
 
         themeUtils = new ThemeUtils(context);
@@ -116,8 +121,6 @@ public abstract class QuestionWidget
             state = ((FormEntryActivity) context).getState();
             permissionUtils = new PermissionUtils();
         }
-
-        questionFontSize = Collect.getQuestionFontsize();
 
         this.questionDetails = questionDetails;
         formEntryPrompt = questionDetails.getPrompt();
@@ -134,10 +137,33 @@ public abstract class QuestionWidget
         helpTextView = setupHelpText(helpTextLayout.findViewById(R.id.help_text_view), formEntryPrompt);
         setupGuidanceTextAndLayout(helpTextLayout.findViewById(R.id.guidance_text_view), formEntryPrompt);
 
-        if (context instanceof FormEntryActivity && !getFormEntryPrompt().isReadOnly()) {
-            registerToClearAnswerOnLongPress((FormEntryActivity) context);
+        View answerView = onCreateAnswerView(context, getFormEntryPrompt(), getAnswerFontSize());
+        if (answerView != null) {
+            addAnswerView(answerView);
+        }
+
+        if (registerForContextMenu && context instanceof FormEntryActivity && !getFormEntryPrompt().isReadOnly()) {
+            registerToClearAnswerOnLongPress((FormEntryActivity) context, this);
         }
     }
+
+    /**
+     * Returns the `View` object that represents the interface for answering the question. This
+     * will be rendered underneath the question's `label`, `hint` and `guidance_hint`. This method
+     * is passed the question itself (as a `FormEntryPrompt`) which will often be needed in
+     * rendering the widget. It is also passed the size to be used for question text.
+     */
+    @SuppressWarnings("PMD.EmptyMethodInAbstractClassShouldBeAbstract")
+    protected View onCreateAnswerView(Context context, FormEntryPrompt prompt, int answerFontSize) {
+        return null;
+    }
+
+    /**
+     * Used to make sure clickable views in the widget work with the long click feature (shows
+     * the "Edit Prompt" menu). The passed listener should be set as the long click listener on
+     * clickable views in the widget.
+     */
+    public abstract void setOnLongClickListener(OnLongClickListener l);
 
     protected int getLayout() {
         return R.layout.question_widget;
@@ -160,7 +186,7 @@ public abstract class QuestionWidget
         String playableAudioURI = getPlayableAudioURI(prompt, referenceManager);
         if (playableAudioURI != null) {
             label.setAudio(playableAudioURI, audioHelper);
-            analytics.logEvent("Prompt", "AudioLabel", questionDetails.getFormAnalyticsID());
+            analytics.logEvent(AUDIO_QUESTION, "AudioLabel", questionDetails.getFormAnalyticsID());
         }
 
         label.setPlayTextColor(getPlayColor(formEntryPrompt, themeUtils));
@@ -297,8 +323,6 @@ public abstract class QuestionWidget
         SoftKeyboardUtils.hideSoftKeyboard(this);
     }
 
-    public abstract void setOnLongClickListener(OnLongClickListener l);
-
     /**
      * Override this to implement fling gesture suppression (e.g. for embedded WebView treatments).
      *
@@ -361,10 +385,15 @@ public abstract class QuestionWidget
         }
     }
 
+    @Deprecated
     protected final void addAnswerView(View v) {
         addAnswerView(v, null);
     }
 
+    /**
+     * Widget should use {@link #onCreateAnswerView} to define answer view
+     */
+    @Deprecated
     protected final void addAnswerView(View v, Integer margin) {
         ViewGroup answerContainer = findViewById(R.id.answer_container);
 
@@ -377,14 +406,14 @@ public abstract class QuestionWidget
         }
 
         answerContainer.addView(v, params);
-}
+    }
 
     /**
      * Register this widget's child views to pop up a context menu to clear the widget when the
      * user long presses on it. Widget subclasses may override this if some or all of their
      * components need to intercept long presses.
      */
-    protected void registerToClearAnswerOnLongPress(FormEntryActivity activity) {
+    protected void registerToClearAnswerOnLongPress(FormEntryActivity activity, ViewGroup viewGroup) {
         activity.registerForContextMenu(this);
     }
 
@@ -392,6 +421,7 @@ public abstract class QuestionWidget
      * Every subclassed widget should override this, adding any views they may contain, and calling
      * super.cancelLongPress()
      */
+    @Override
     public void cancelLongPress() {
         super.cancelLongPress();
         if (getAudioVideoImageTextLabel() != null) {
@@ -473,7 +503,7 @@ public abstract class QuestionWidget
     }
 
     public int getAnswerFontSize() {
-        return questionFontSize + 2;
+        return (int) questionTextSizeHelper.getHeadline6();
     }
 
     public View getHelpTextLayout() {

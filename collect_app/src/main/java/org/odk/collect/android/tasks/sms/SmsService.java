@@ -12,7 +12,6 @@ import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.support.PersistableBundleCompat;
 
 import org.odk.collect.android.R;
-import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.dao.FormsDao;
 import org.odk.collect.android.dao.InstancesDao;
 import org.odk.collect.android.events.RxEventBus;
@@ -330,10 +329,10 @@ public class SmsService {
 
             boolean isFormAutoDeleteOptionEnabled = (boolean) GeneralSharedPreferences.getInstance().get(GeneralKeys.KEY_DELETE_AFTER_SEND);
             String formId = null;
-            String formVersion = null;
+            //String formVersion = null;
             while (cursor.moveToNext()) {
                 formId = cursor.getString(cursor.getColumnIndex(InstanceColumns.JR_FORM_ID));
-                formVersion = cursor.getString(cursor.getColumnIndex(InstanceColumns.JR_VERSION));
+                //formVersion = cursor.getString(cursor.getColumnIndex(InstanceColumns.JR_VERSION));
                 if (InstanceServerUploader.formShouldBeAutoDeleted(formId, isFormAutoDeleteOptionEnabled)) {
 
                     List<String> instancesToDelete = new ArrayList<>();
@@ -345,7 +344,7 @@ public class SmsService {
                 }
             }
 
-            Collect.getInstance().logRemoteAnalytics("Submission", "SMS", Collect.getFormIdentifierHash(formId, formVersion));
+            //Collect.getInstance().logRemoteAnalytics(SUBMISSION, "SMS", Collect.getFormIdentifierHash(formId, formVersion));
         }
     }
 

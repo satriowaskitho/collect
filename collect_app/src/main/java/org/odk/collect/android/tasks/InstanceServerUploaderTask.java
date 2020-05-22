@@ -15,6 +15,7 @@
 package org.odk.collect.android.tasks;
 
 import org.odk.collect.android.R;
+import org.odk.collect.android.analytics.Analytics;
 import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.instances.Instance;
 import org.odk.collect.android.openrosa.OpenRosaHttpInterface;
@@ -29,6 +30,8 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import static org.odk.collect.android.analytics.AnalyticsEvents.SUBMISSION;
+
 /**
  * Background task for uploading completed forms.
  *
@@ -41,6 +44,9 @@ public class InstanceServerUploaderTask extends InstanceUploaderTask {
     @Inject
     WebCredentialsUtils webCredentialsUtils;
 
+    @Inject
+    Analytics analytics;
+
     // Custom submission URL, username and password that can be sent via intent extras by external
     // applications
     private String completeDestinationUrl;
@@ -52,7 +58,7 @@ public class InstanceServerUploaderTask extends InstanceUploaderTask {
     }
 
     @Override
-    protected Outcome doInBackground(Long... instanceIdsToUpload) {
+    public Outcome doInBackground(Long... instanceIdsToUpload) {
         Outcome outcome = new Outcome();
 
         InstanceServerUploader uploader = new InstanceServerUploader(httpInterface, webCredentialsUtils, new HashMap<>());
@@ -75,7 +81,7 @@ public class InstanceServerUploaderTask extends InstanceUploaderTask {
                 outcome.messagesByInstanceId.put(instance.getDatabaseId().toString(),
                         customMessage != null ? customMessage : Collect.getInstance().getString(R.string.success));
 
-                Collect.getInstance().logRemoteAnalytics("Submission", "HTTP", Collect.getFormIdentifierHash(instance.getJrFormId(), instance.getJrVersion()));
+                analytics.logEvent(SUBMISSION, "HTTP", Collect.getFormIdentifierHash(instance.getJrFormId(), instance.getJrVersion()));
             } catch (UploadAuthRequestedException e) {
                 outcome.authRequestingServer = e.getAuthRequestingServer();
                 // Don't add the instance that caused an auth request to the map because we want to

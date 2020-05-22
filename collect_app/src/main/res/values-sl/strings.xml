@@ -75,8 +75,6 @@
   <string name="load_remote_form_error">Napaka pri pridobivanju seznama obrazcev</string>
   <string name="location_provider_accuracy">Uporabljam %1$s. Natančnost je %2$s m.</string>
   <string name="location_accuracy">Natančnost je %1$s m</string>
-  <string name="main_menu">Glavni menu</string>
-  <string name="main_menu_details">Olajša zbiranje podatkov …</string>
   <string name="manage_files">Briši shranjen obrazec</string>
   <string name="mark_finished">Označi obrazec kot zaključen</string>
   <string name="noselect_error">Niste izbrali obrazca!</string>
@@ -202,7 +200,6 @@
   <string name="autosend">Samodejno pošlji</string>
   <string name="found_in_main">Ne izberi da ne prikaže v Glavnem meniju</string>
   <string name="found_in_settings">Ne izberi da ne prikaže v Splošne nastavitve</string>
-  <string name="save_preferences">Shrani nastavitve</string>
   <string name="form_forward">Naprej</string>
   <string name="navigation">Navigacija</string>
   <string name="swipe_navigation">Uporabi horizontalne potege</string>

@@ -64,8 +64,6 @@
   <string name="load_remote_form_error">Det er oppstått en feil</string>
   <string name="location_provider_accuracy">Bruker %1$s. Nøyaktighet er %2$s m.</string>
   <string name="location_accuracy">Nøyaktigheten er %1$s m</string>
-  <string name="main_menu">Hovedmeny</string>
-  <string name="main_menu_details">Forenklet datainnsamling…</string>
   <string name="manage_files">Slett lagret skjema</string>
   <string name="mark_finished">Kryss skjema som ferdig</string>
   <string name="noselect_error">Beklager, du har ikke valgt skjema!</string>
@@ -179,7 +177,6 @@
   <string name="enter_admin_password">Enter Admin Password</string>
   <string name="found_in_main">Uncheck to hide from Main Menu</string>
   <string name="found_in_settings">Uncheck to hide from General Settings</string>
-  <string name="save_preferences">Save Settings to Disk</string>
   <string name="form_forward">Next</string>
   <string name="navigation">Navigation</string>
   <string name="swipe_navigation">Use horizontal swipes</string>

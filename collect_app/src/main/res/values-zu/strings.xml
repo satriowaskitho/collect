@@ -63,8 +63,6 @@
   <string name="load_remote_form_error">Iphutha ekutholeni uhlu lwamafomu</string>
   <string name="location_provider_accuracy">Ukusebenzisa %1$s. ukucophelela %2$s m.</string>
   <string name="location_accuracy">Ukucophelela %1s% m</string>
-  <string name="main_menu">Uhlu oluwumsuka</string>
-  <string name="main_menu_details">Ukuqoqa ulwazi kwenziwe lula…</string>
   <string name="manage_files">Susa ifomu elongiwe</string>
   <string name="mark_finished">Bonisa ukuthi ifomu liphothuliwe</string>
   <string name="noselect_error">Uxolo, alikho ifomu olikhethile</string>
@@ -175,7 +173,6 @@
   <string name="enter_admin_password">Faka inombolomfihlo yokusingathwa komsebenzi</string>
   <string name="found_in_main">Susa uphawu ukufihla ohlwini oluwumongo</string>
   <string name="found_in_settings">Susa uphawu ukufihla ohlwini ezinhlelweni ezivamile</string>
-  <string name="save_preferences">Gcina izinhlelo kudiskhi</string>
   <string name="form_forward">Okulandelayo</string>
   <string name="navigation">Ukubhekabheka</string>
   <string name="swipe_navigation">Hambisa isandla unqumise/uvundle</string>

@@ -6,7 +6,6 @@ import android.content.pm.ActivityInfo;
 import androidx.test.espresso.Espresso;
 import androidx.test.espresso.NoMatchingViewException;
 import androidx.test.espresso.ViewAction;
-
 import androidx.test.espresso.core.internal.deps.guava.collect.Iterables;
 import androidx.test.espresso.matcher.ViewMatchers;
 import androidx.test.rule.ActivityTestRule;
@@ -41,9 +40,9 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.hamcrest.core.StringEndsWith.endsWith;
+import static org.odk.collect.android.support.CustomMatchers.withIndex;
 import static org.odk.collect.android.support.actions.NestedScrollToAction.nestedScrollTo;
 import static org.odk.collect.android.support.matchers.RecyclerViewMatcher.withRecyclerView;
-import static org.odk.collect.android.test.CustomMatchers.withIndex;
 
 /**
  * Base class for Page Objects used in Espresso tests. Provides shared helpers/setup.
@@ -81,14 +80,14 @@ abstract class Page<T extends Page<T>> {
         return destination.assertOnPage();
     }
 
-    public T checkIsTextDisplayed(String text) {
-        onView(withText(text)).check(matches(isDisplayed()));
+    public T assertText(String text) {
+        onView(allOf(withText(text), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE))).check(matches(isDisplayed()));
         return (T) this;
     }
 
-    public T checkIsTextDisplayed(String...  text) {
-        for (String s : text) {
-            onView(withText(s)).check(matches(isDisplayed()));
+    public T assertText(String...  text) {
+        for (String t : text) {
+            onView(allOf(withText(t), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE))).check(matches(isDisplayed()));
         }
         return (T) this;
     }
@@ -119,14 +118,20 @@ abstract class Page<T extends Page<T>> {
     }
 
     public T checkIsStringDisplayed(int stringID) {
-        checkIsTextDisplayed(getTranslatedString(stringID));
+        assertText(getTranslatedString(stringID));
         return (T) this;
     }
 
     public T checkIsToastWithMessageDisplayed(String message) {
-        onView(withText(message))
-                .inRoot(withDecorView(not(is(getCurrentActivity().getWindow().getDecorView()))))
-                .check(matches(isDisplayed()));
+        try {
+            onView(withText(message))
+                    .inRoot(withDecorView(not(is(getCurrentActivity().getWindow().getDecorView()))))
+                    .check(matches(isDisplayed()));
+        } catch (RuntimeException e) {
+            // The exception we get out of this is really misleading so cleaning it up here
+            throw new RuntimeException("No Toast with text \"" + message + "\" shown on screen!");
+        }
+
 
         return (T) this;
     }
@@ -258,7 +263,7 @@ abstract class Page<T extends Page<T>> {
         return (T) this;
     }
 
-    public T scrollToAndCheckIsDisplayed(String text) {
+    public T scrollToAndAssertText(String text) {
         onView(withText(text)).perform(nestedScrollTo());
         onView(withText(text)).check(matches(isDisplayed()));
         return (T) this;
@@ -285,13 +290,25 @@ abstract class Page<T extends Page<T>> {
         return (T) this;
     }
 
-    void waitForText(String text) {
-        while (true) {
+    void tryAgainOnFail(Runnable action) {
+        try {
+            action.run();
+        } catch (NoMatchingViewException e) {
+            assertOnPage();
+            action.run();
+        }
+    }
+
+    public void waitForText(String text) {
+        int counter = 0;
+        NoMatchingViewException failure = null;
+
+        while (counter < 20) {
             try {
-                checkIsTextDisplayed(text);
-                break;
-            } catch (NoMatchingViewException ignored) {
-                // ignored
+                assertText(text);
+                return;
+            } catch (NoMatchingViewException exception) {
+                failure = exception;
             }
 
             try {
@@ -299,6 +316,12 @@ abstract class Page<T extends Page<T>> {
             } catch (InterruptedException ignored) {
                 // ignored
             }
+
+            counter++;
+        }
+
+        if (failure != null) {
+            throw failure;
         }
     }
 }
