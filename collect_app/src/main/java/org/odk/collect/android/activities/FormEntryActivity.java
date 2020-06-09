@@ -87,13 +87,12 @@ import org.odk.collect.android.dao.helpers.InstancesDaoHelper;
 import org.odk.collect.android.events.ReadPhoneStatePermissionRxEvent;
 import org.odk.collect.android.events.RxEventBus;
 import org.odk.collect.android.exception.JavaRosaException;
-import org.odk.collect.android.external.ExternalDataManager;
+import org.odk.collect.android.formentry.FormLoadingDialogFragment;
+import org.odk.collect.android.formentry.ODKView;
+import org.odk.collect.android.formentry.QuitFormDialogFragment;
 import org.odk.collect.android.formentry.FormEntryMenuDelegate;
 import org.odk.collect.android.formentry.FormEntryViewModel;
 import org.odk.collect.android.formentry.FormIndexAnimationHandler;
-import org.odk.collect.android.formentry.FormLoadingDialogFragment;
-import org.odk.collect.android.formentry.ODKView;
-import org.odk.collect.android.formentry.QuitFormDialog;
 import org.odk.collect.android.formentry.audit.AuditEvent;
 import org.odk.collect.android.formentry.audit.AuditUtils;
 import org.odk.collect.android.formentry.audit.ChangesReasonPromptDialogFragment;
@@ -101,6 +100,7 @@ import org.odk.collect.android.formentry.audit.IdentifyUserPromptDialogFragment;
 import org.odk.collect.android.formentry.audit.IdentityPromptViewModel;
 import org.odk.collect.android.formentry.backgroundlocation.BackgroundLocationManager;
 import org.odk.collect.android.formentry.backgroundlocation.BackgroundLocationViewModel;
+import org.odk.collect.android.formentry.loading.FormInstanceFileCreator;
 import org.odk.collect.android.formentry.repeats.AddRepeatDialog;
 import org.odk.collect.android.formentry.saving.FormSaveViewModel;
 import org.odk.collect.android.formentry.saving.SaveFormProgressDialogFragment;
@@ -131,16 +131,13 @@ import org.odk.collect.android.storage.StoragePathProvider;
 import org.odk.collect.android.storage.StorageSubdirectory;
 import org.odk.collect.android.tasks.FormLoaderTask;
 import org.odk.collect.android.tasks.SaveFormIndexTask;
-import org.odk.collect.android.tasks.SaveFormToDisk;
 import org.odk.collect.android.tasks.SavePointTask;
 import org.odk.collect.android.upload.AutoSendWorker;
 import org.odk.collect.android.utilities.ApplicationConstants;
 import org.odk.collect.android.utilities.DestroyableLifecyleOwner;
 import org.odk.collect.android.utilities.DialogUtils;
-import org.odk.collect.android.utilities.FileUtils;
 import org.odk.collect.android.utilities.FormNameUtils;
 import org.odk.collect.android.utilities.ImageConverter;
-import org.odk.collect.android.utilities.MediaManager;
 import org.odk.collect.android.utilities.MediaUtils;
 import org.odk.collect.android.utilities.PermissionUtils;
 import org.odk.collect.android.utilities.PlayServicesUtil;
@@ -158,13 +155,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -207,7 +202,8 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
         SaveFormIndexTask.SaveFormIndexListener, WidgetValueChangedListener,
         ScreenContext, FormLoadingDialogFragment.FormLoadingDialogFragmentListener,
         AudioControllerView.SwipableParent,
-        FormIndexAnimationHandler.Listener {
+        FormIndexAnimationHandler.Listener,
+        QuitFormDialogFragment.Listener {
 
     // Defines for FormEntryActivity
     private static final boolean EXIT = true;
@@ -315,6 +311,9 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
 
     @Inject
     NetworkStateProvider connectivityProvider;
+
+    @Inject
+    StoragePathProvider storagePathProvider;
 
     private final LocationProvidersReceiver locationProvidersReceiver = new LocationProvidersReceiver();
 
@@ -616,7 +615,7 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
                         formPath.lastIndexOf('.'))
                         + "_";
                 final String fileSuffix = ".xml.save";
-                File cacheDir = new File(new StoragePathProvider().getDirPath(StorageSubdirectory.CACHE));
+                File cacheDir = new File(storagePathProvider.getDirPath(StorageSubdirectory.CACHE));
                 File[] files = cacheDir.listFiles(pathname -> {
                     String name = pathname.getName();
                     return name.startsWith(filePrefix)
@@ -634,7 +633,7 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
                                     candidate.getName().length()
                                             - fileSuffix.length());
                     File instanceDir = new File(
-                            new StoragePathProvider().getDirPath(StorageSubdirectory.INSTANCES) + File.separator
+                            storagePathProvider.getDirPath(StorageSubdirectory.INSTANCES) + File.separator
                                     + instanceDirName);
                     File instanceFile = new File(instanceDir,
                             instanceDirName + ".xml");
@@ -831,7 +830,6 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
                  */
                 // The intent is empty, but we know we saved the image to the temp
                 // file
-                StoragePathProvider storagePathProvider = new StoragePathProvider();
                 ImageConverter.execute(storagePathProvider.getTmpFilePath(), getWidgetWaitingForBinaryData(), this);
                 File fi = new File(storagePathProvider.getTmpFilePath());
 
@@ -1030,7 +1028,7 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
 
             case R.id.menu_save:
                 // don't exit
-                saveForm(DO_NOT_EXIT, InstancesDaoHelper.isInstanceComplete(false), null);
+                saveForm(DO_NOT_EXIT, InstancesDaoHelper.isInstanceComplete(false), null, true);
                 return true;
 
             case R.id.menu_goto:
@@ -1402,7 +1400,7 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
                         } else {
                             saveForm(EXIT, instanceComplete
                                     .isChecked(), saveAs.getText()
-                                    .toString());
+                                    .toString(), true);
                         }
                     }
                 });
@@ -1811,12 +1809,6 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
      * isntancs as complete. If updatedSaveName is non-null, the instances
      * content provider is updated with the new name
      */
-    // by default, save the current screen
-    private boolean saveForm(boolean exit, boolean complete, String updatedSaveName) {
-        return saveForm(exit, complete, updatedSaveName, true);
-    }
-
-    // but if you want save in the background, can't be current screen
     private boolean saveForm(boolean exit, boolean complete, String updatedSaveName,
                              boolean current) {
         // save current answer
@@ -1917,58 +1909,12 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
      * saving
      */
     private void createQuitDialog() {
-        alertDialog = QuitFormDialog.show(this, getFormController(), new QuitFormDialog.Listener() {
-            @Override
-            public void onSaveChangedClicked() {
-                saveForm(EXIT, InstancesDaoHelper.isInstanceComplete(false), null);
-                alertDialog.dismiss();
-            }
-
-            @Override
-            public void onIgnoreChangesClicked() {
-                // close all open databases of external data.
-                ExternalDataManager manager = Collect.getInstance().getExternalDataManager();
-                if (manager != null) {
-                    manager.close();
-                }
-
-                FormController formController = getFormController();
-                if (formController != null) {
-                    formController.getAuditEventLogger().logEvent(AuditEvent.AuditEventType.FORM_EXIT, true, System.currentTimeMillis());
-                }
-                removeTempInstance();
-                MediaManager.INSTANCE.revertChanges();
-                finishAndReturnInstance();
-
-                alertDialog.dismiss();
-            }
-        });
+        showIfNotShowing(QuitFormDialogFragment.class, getSupportFragmentManager());
     }
 
-    // Cleanup when user exits a form without saving
-    private void removeTempInstance() {
-        FormController formController = getFormController();
-
-        if (formController != null && formController.getInstanceFile() != null) {
-            SaveFormToDisk.removeSavepointFiles(formController.getInstanceFile().getName());
-
-            // if it's not already saved, erase everything
-            if (!InstancesDaoHelper.isInstanceAvailable(getAbsoluteInstancePath())) {
-                // delete media first
-                String instanceFolder = formController.getInstanceFile().getParent();
-                Timber.i("Attempting to delete: %s", instanceFolder);
-                File file = formController.getInstanceFile().getParentFile();
-                int images = MediaUtils.deleteImagesInFolderFromMediaProvider(file);
-                int audio = MediaUtils.deleteAudioInFolderFromMediaProvider(file);
-                int video = MediaUtils.deleteVideoInFolderFromMediaProvider(file);
-
-                Timber.i("Removed from content providers: %d image files, %d audio files and %d audio files.",
-                        images, audio, video);
-                FileUtils.purgeMediaPath(instanceFolder);
-            }
-        } else {
-            Timber.w("null returned by getFormController()");
-        }
+    @Override
+    public void onSaveChangesClicked() {
+        saveForm(EXIT, InstancesDaoHelper.isInstanceComplete(false), null, true);
     }
 
     @Nullable
@@ -2045,7 +1991,7 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
                                         languages[whichButton]);
                                 String selection = FormsColumns.FORM_FILE_PATH
                                         + "=?";
-                                String[] selectArgs = {new StoragePathProvider().getFormDbPath(formPath)};
+                                String[] selectArgs = {storagePathProvider.getFormDbPath(formPath)};
                                 int updated = new FormsDao().updateForm(values, selection, selectArgs);
                                 Timber.i("Updated language to: %s in %d rows",
                                         languages[whichButton],
@@ -2390,7 +2336,18 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
                 }
 
                 if (formController.getInstanceFile() == null) {
-                    createInstanceDirectory(formController);
+                    FormInstanceFileCreator formInstanceFileCreator = new FormInstanceFileCreator(
+                            storagePathProvider,
+                            System::currentTimeMillis
+                    );
+
+                    File instanceFile = formInstanceFileCreator.createInstanceFile(formPath);
+                    if (instanceFile != null) {
+                        formController.setInstanceFile(instanceFile);
+                    } else {
+                        showFormLoadErrorAndExit(getString(R.string.loading_form_failed));
+                    }
+
                     formControllerAvailable(formController);
 
                     identityPromptViewModel.requiresIdentityToContinue().observe(this, requiresIdentity -> {
@@ -2480,24 +2437,15 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
         }
     }
 
-    private void createInstanceDirectory(FormController formController) {
-        String time = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss",
-                Locale.ENGLISH).format(Calendar.getInstance().getTime());
-        String file = formPath.substring(formPath.lastIndexOf('/') + 1,
-                formPath.lastIndexOf('.'));
-        String path = new StoragePathProvider().getDirPath(StorageSubdirectory.INSTANCES) + File.separator + file + "_"
-                + time;
-        if (FileUtils.createFolder(path)) {
-            File instanceFile = new File(path + File.separator + file + "_" + time + ".xml");
-            formController.setInstanceFile(instanceFile);
-        }
-    }
-
     /**
      * called by the FormLoaderTask if something goes wrong.
      */
     @Override
     public void loadingError(String errorMsg) {
+        showFormLoadErrorAndExit(errorMsg);
+    }
+
+    private void showFormLoadErrorAndExit(String errorMsg) {
         DialogUtils.dismissDialog(FormLoadingDialogFragment.class, getSupportFragmentManager());
 
         if (errorMsg != null) {
@@ -2878,8 +2826,7 @@ public class FormEntryActivity extends CollectAbstractActivity implements Animat
 
     // If an answer has changed after saving one of previous answers that means it has been recalculated automatically
     private boolean isQuestionRecalculated(FormEntryPrompt mutableQuestionBeforeSave, ImmutableDisplayableQuestion immutableQuestionBeforeSave) {
-        return !(mutableQuestionBeforeSave.getAnswerText() == null && immutableQuestionBeforeSave.getAnswerText() == null
-                || mutableQuestionBeforeSave.getAnswerText().equals(immutableQuestionBeforeSave.getAnswerText()));
+        return !Objects.equals(mutableQuestionBeforeSave.getAnswerText(), immutableQuestionBeforeSave.getAnswerText());
     }
 }
 

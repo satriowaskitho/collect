@@ -4,8 +4,6 @@ import org.odk.collect.android.R;
 import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.utilities.QuestionFontSizeUtils;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 
 public final class GeneralKeys {
@@ -17,7 +15,7 @@ public final class GeneralKeys {
     public static final String KEY_USERNAME                 = "username";
     public static final String KEY_PASSWORD                 = "password";
 
-    // other_preferences.xml
+    // custom_server_paths_preferences.xmlreferences.xml
     public static final String KEY_FORMLIST_URL             = "formlist_url";
     public static final String KEY_SUBMISSION_URL           = "submission_url";
 
@@ -66,16 +64,6 @@ public final class GeneralKeys {
     public static final String KEY_METADATA_EMAIL           = "metadata_email";
 
     static final String KEY_FORM_METADATA                   = "form_metadata";
-
-    // other keys
-    public static final String KEY_LAST_VERSION             = "lastVersion";
-    public static final String KEY_FIRST_RUN                = "firstRun";
-    public static final String KEY_SCOPED_STORAGE_USED      = "scoped_storage_used";
-    public static final String KEY_MAPBOX_INITIALIZED       = "mapbox_initialized";
-
-    /** Whether any existing username and email values have been migrated to form metadata */
-    static final String KEY_METADATA_MIGRATED               = "metadata_migrated";
-    public static final String KEY_INSTALL_ID               = "metadata_installid";
 
     public static final String KEY_BACKGROUND_LOCATION      = "background_location";
 
@@ -133,7 +121,7 @@ public final class GeneralKeys {
         hashMap.put(KEY_GOOGLE_SHEETS_URL,          "");
         // identity_preferences.xml
         hashMap.put(KEY_ANALYTICS,                  true);
-        // other_preferences.xml
+        // custom_server_paths_preferenceshs_preferences.xml
         hashMap.put(KEY_FORMLIST_URL,               Collect.getInstance().getString(R.string.default_odk_formlist));
         hashMap.put(KEY_SUBMISSION_URL,             Collect.getInstance().getString(R.string.default_odk_submission));
         // server_preferences.xml
@@ -151,16 +139,6 @@ public final class GeneralKeys {
         hashMap.put(KEY_BASEMAP_SOURCE,             BASEMAP_SOURCE_GOOGLE);
         return hashMap;
     }
-
-    static final Collection<String> KEYS_WE_SHOULD_NOT_RESET = Arrays.asList(
-            KEY_LAST_VERSION,
-            KEY_FIRST_RUN,
-            KEY_METADATA_MIGRATED,
-            KEY_AUTOSEND_WIFI,
-            KEY_AUTOSEND_NETWORK,
-            KEY_SCOPED_STORAGE_USED,
-            KEY_MAPBOX_INITIALIZED
-    );
 
     public static final HashMap<String, Object> DEFAULTS = getHashMap();
 

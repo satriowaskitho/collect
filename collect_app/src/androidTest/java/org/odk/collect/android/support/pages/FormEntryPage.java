@@ -42,11 +42,25 @@ public class FormEntryPage extends Page<FormEntryPage> {
         return this;
     }
 
+    /**
+     * @deprecated use {@link #swipeToNextQuestion(String)} instead
+     */
+    @Deprecated
     public FormEntryPage swipeToNextQuestion() {
         onView(withId(R.id.questionholder)).perform(swipeLeft());
         return this;
     }
 
+    public FormEntryPage swipeToNextQuestion(String questionText) {
+        onView(withId(R.id.questionholder)).perform(swipeLeft());
+        waitForText(questionText);
+        return this;
+    }
+
+    /**
+     * @deprecated use {@link #swipeToNextQuestion(String)} instead
+     */
+    @Deprecated
     public FormEntryPage swipeToNextQuestion(int repetitions) {
         for (int i = 0; i < repetitions; i++) {
             swipeToNextQuestion();
@@ -54,13 +68,16 @@ public class FormEntryPage extends Page<FormEntryPage> {
         return this;
     }
 
-    public FormEndPage swipeToEndScreen() {
-        tryAgainOnFail(() -> {
-            onView(withId(R.id.questionholder)).perform(swipeLeft());
-            new FormEndPage(formName, rule).assertOnPage();
-        });
+    public FormEntryPage swipeToNextRepeat(String repeatLabel, int repeatNumber) {
+        waitForText(repeatLabel + " > " + (repeatNumber - 1));
+        onView(withId(R.id.questionholder)).perform(swipeLeft());
+        waitForText(repeatLabel + " > " + repeatNumber);
+        return this;
+    }
 
-        return new FormEndPage(formName, rule);
+    public FormEndPage swipeToEndScreen() {
+        onView(withId(R.id.questionholder)).perform(swipeLeft());
+        return waitFor(() -> new FormEndPage(formName, rule).assertOnPage());
     }
 
     public ErrorDialog swipeToNextQuestionWithError() {
@@ -89,8 +106,17 @@ public class FormEntryPage extends Page<FormEntryPage> {
         return this;
     }
 
+    /**
+     * @deprecated use {@link #swipeToPreviousQuestion(String)} instead
+     */
     public FormEntryPage swipeToPreviousQuestion() {
         onView(withId(R.id.questionholder)).perform(swipeRight());
+        return this;
+    }
+
+    public FormEntryPage swipeToPreviousQuestion(String questionText) {
+        onView(withId(R.id.questionholder)).perform(swipeRight());
+        assertText(questionText);
         return this;
     }
 
@@ -219,11 +245,14 @@ public class FormEntryPage extends Page<FormEntryPage> {
     }
 
     public AddNewRepeatDialog swipeToNextQuestionWithRepeatGroup(String repeatName) {
-        tryAgainOnFail(() -> {
-            onView(withId(R.id.questionholder)).perform(swipeLeft());
-            new AddNewRepeatDialog(repeatName, rule).assertOnPage();
-        });
+        onView(withId(R.id.questionholder)).perform(swipeLeft());
+        return waitFor(() -> new AddNewRepeatDialog(repeatName, rule).assertOnPage());
+    }
 
-        return new AddNewRepeatDialog(repeatName, rule);
+    public FormEntryPage answerQuestion(String question, String answer) {
+        assertText(question);
+        inputText(answer);
+        closeSoftKeyboard();
+        return this;
     }
 }
