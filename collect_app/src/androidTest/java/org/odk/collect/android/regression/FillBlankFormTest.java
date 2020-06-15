@@ -5,7 +5,7 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import androidx.test.rule.GrantPermissionRule;
-import androidx.test.runner.AndroidJUnit4;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -458,19 +458,19 @@ public class FillBlankFormTest {
 
     @Test
     public void bigForm_ShouldBeFilledSuccessfully() {
-
         //TestCase18
         new MainMenuPage(rule)
                 .startBlankForm("Nigeria Wards")
+                .assertQuestion("State")
                 .clickOnString(R.string.select_one)
                 .clickOnText("Adamawa")
-                .swipeToNextQuestion()
+                .swipeToNextQuestion("LGA", true)
                 .clickOnString(R.string.select_one)
                 .clickOnText("Ganye")
-                .swipeToNextQuestion()
+                .swipeToNextQuestion("Ward", true)
                 .clickOnString(R.string.select_one)
                 .clickOnText("Jaggu")
-                .swipeToNextQuestion()
+                .swipeToNextQuestion("Comments")
                 .swipeToEndScreen()
                 .clickSaveAndExit();
     }
